@@ -1,0 +1,7 @@
+
+- name: Check OS
+  debug: msg="{ ansible_os_family }} {{ ansible_architecture }} is not supported" fail=yes
+  when: not ansible_os_family == "RedHat" or not ansible_architecture == "x86_64"
+
+- include: reinstall.yml
+- include: configure.yml

@@ -1,0 +1,31 @@
+- name: Stop PostgreSQL if are running
+  become: yes
+  become_user: postgres
+  command: "/usr/pgsql-9.4/bin/pg_ctl -D {{ postgresql_datadir }} stop"
+  ignore_errors: yes
+
+# Uncomment this part to autoremove existing data directories, very risky!
+# - name: Remove old PostgreSQL data directory if exists
+#   file:
+#     dest={{ postgresql_datadir }}
+#     state=absent
+
+- name : check if future data directory is empty
+  find:
+    paths: "{{ postgresql_datadir }}"
+    patterns: '*'
+  register: foundFiles
+
+- name: fail if data dir full
+  fail: msg="Data directory is not empty."
+  when: foundFiles.matched > 0
+
+- name: 2ndQuadrant PostgreSQL BDR official repository install
+  yum:
+    name: http://packages.2ndquadrant.com/postgresql-bdr94-2ndquadrant/yum-repo-rpms/postgresql-bdr94-2ndquadrant-redhat-1.0-2.noarch.rpm
+    state: present
+
+- name: Install Official PostgreSQL BDR packages
+  yum:
+    name: ['postgresql-bdr94-bdr', 'python-psycopg2']
+    state: latest

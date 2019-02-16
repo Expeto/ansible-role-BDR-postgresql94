@@ -1,0 +1,19 @@
+ansible_connection: ssh
+ansible_ssh_user: root
+ansible_ssh_pass: asdasd123
+
+# Basic settings
+postgresql_datadir: /var/lib/pgsql/9.4-bdr/data
+initial_master: 192.168.118.134
+postgresql_bdr_database_name: demodb
+postgresql_admin_user: postgres
+
+# postgresql.conf settings
+postgresql_conf_items:
+  - { regexp: "^#?max_worker_processes = .*$", value: "max_worker_processes = 10" }
+  - { regexp: "^#?track_commit_timestamp = .*$", value: "track_commit_timestamp = on" }
+  - { regexp: "^#?shared_preload_libraries = .*$", value: "shared_preload_libraries = 'bdr'" }
+  - { regexp: "^#?listen_addresses = .*$", value: "listen_addresses = '*'" }
+  - { regexp: "^#?max_replication_slots = .*$", value: "max_replication_slots = 8" }
+  - { regexp: "^#?max_wal_senders = .*$", value: "max_wal_senders = 8" }
+  - { regexp: "^#?wal_level = .*$", value: "wal_level = 'logical'" }

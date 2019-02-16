@@ -1,0 +1,84 @@
+- name: Initialize new PostgreSQL cluster
+  become: yes
+  become_user: postgres
+  command: "/usr/pgsql-9.4/bin/initdb -D {{ postgresql_datadir }} -A trust"
+
+- name: Allow access for all hosts in pg_hba.conf
+  lineinfile:
+    dest: "{{ postgresql_datadir }}/pg_hba.conf"
+    state: present
+    owner: "{{ postgresql_admin_user }}"
+    group: "{{ postgresql_admin_user }}"
+    mode: 0640
+    line: "host    all   {{ postgresql_admin_user }}        {{ item }}/32       trust"
+  with_inventory_hostnames:
+    - all
+
+- name: Allow access for all hosts in pg_hba.conf
+  lineinfile:
+    dest: "{{ postgresql_datadir }}/pg_hba.conf"
+    state: present
+    owner: "{{ postgresql_admin_user }}"
+    group: "{{ postgresql_admin_user }}"
+    mode: 0640
+    line: "host    replication    {{ postgresql_admin_user }}        {{ item }}/32       trust"
+  with_inventory_hostnames:
+    - all
+
+- name: Configure postgresql.conf
+  lineinfile:
+    dest: "{{ postgresql_datadir }}/postgresql.conf"
+    state: present
+    owner: "{{ postgresql_admin_user }}"
+    group: "{{ postgresql_admin_user }}"
+    mode: 0640
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.value }}"
+  with_items: '{{ postgresql_conf_items }}'
+
+- name: Start PostgreSQL
+  become: yes
+  become_user: postgres
+  command: "/usr/pgsql-9.4/bin/pg_ctl -D {{ postgresql_datadir }} start"
+
+- name: Create the database
+  postgresql_db:
+    name="{{ postgresql_bdr_database_name }}"
+    state=present
+
+- name: Restart PostgreSQL
+  become: yes
+  become_user: postgres
+  command: "/usr/pgsql-9.4/bin/pg_ctl -D {{ postgresql_datadir }} restart"
+
+- name: enable bdr extensions
+  become: yes
+  become_user: postgres
+  shell: " psql -U {{postgresql_admin_user}} -d {{postgresql_bdr_database_name}} -c \"CREATE EXTENSION {{item}};\" "
+  with_items:
+    - btree_gist
+    - bdr
+
+- name: init bdr from master
+  become: yes
+  become_user: postgres
+  when: inventory_hostname == initial_master
+  shell: " psql -U {{postgresql_admin_user}} -d {{postgresql_bdr_database_name}} -c \"SELECT bdr.bdr_group_create(local_node_name := '{{ansible_hostname}}', node_external_dsn := 'host={{inventory_hostname}} port=5432 dbname={{postgresql_bdr_database_name}}' );\""
+
+
+- name: Check the results
+  become: yes
+  become_user: postgres
+  when: inventory_hostname != initial_master
+  shell: " psql -U {{postgresql_admin_user}} -d {{postgresql_bdr_database_name}} -c \"SELECT bdr.bdr_group_join(local_node_name := '{{ansible_hostname}}', node_external_dsn := 'host={{inventory_hostname}} port=5432 dbname={{postgresql_bdr_database_name}}', join_using_dsn := 'host={{initial_master}} port=5432 dbname={{postgresql_bdr_database_name}}' );\""
+
+- pause:
+    seconds: 10
+
+
+- name: check the result
+  become: yes
+  become_user: postgres
+  shell: " psql -U {{postgresql_admin_user}} -d {{postgresql_bdr_database_name}} -c \" select  * from bdr.bdr_nodes;\""
+  register: result
+- debug: var=result.stdout_lines

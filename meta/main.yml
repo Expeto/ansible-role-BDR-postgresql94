@@ -1,0 +1,13 @@
+galaxy_info:
+  author: "Baransel Saginda"
+  description: Fully automatic role to install PostgreSQL 9.4 BDR on RedHat/CentOS systems and joins them to same cluster
+  license: as-is
+  platforms:
+    - name: EL
+      versions:
+      - 7
+      - 7.5
+      - 8
+  categories:
+   - database
+dependencies: []
