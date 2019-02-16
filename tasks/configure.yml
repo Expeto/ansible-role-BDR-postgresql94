@@ -54,7 +54,7 @@
 - name: enable bdr extensions
   become: yes
   become_user: postgres
-  shell: " psql -U {{ postgresql_admin_user }} -d {{ postgresql_bdr_database_name}} -c \"CREATE EXTENSION {{item}};\" "
+  shell: " psql -U {{ postgresql_admin_user }} -d {{ postgresql_bdr_database_name }} -c \"CREATE EXTENSION {{item}};\" "
   with_items:
     - btree_gist
     - bdr
@@ -63,14 +63,21 @@
   become: yes
   become_user: postgres
   when: inventory_hostname == initial_master
-  shell: " psql -U {{ postgresql_admin_user }} -d {{ postgresql_bdr_database_name }} -c \"SELECT bdr.bdr_group_create(local_node_name := '{{ ansible_hostname }}', node_external_dsn := 'host={{ inventory_hostname }} port=5432 dbname={{ postgresql_bdr_database_name }}' );\""
+  shell: >
+    psql -U {{ postgresql_admin_user }} -d {{ postgresql_bdr_database_name }}
+    -c "SELECT bdr.bdr_group_create(local_node_name := '{{ ansible_hostname }}',
+    node_external_dsn := 'host={{ inventory_hostname }} port=5432 dbname={{ postgresql_bdr_database_name }}' );"
 
 
 - name: Check the results
   become: yes
   become_user: postgres
   when: inventory_hostname != initial_master
-  shell: " psql -U {{ postgresql_admin_user }} -d {{ postgresql_bdr_database_name }} -c \"SELECT bdr.bdr_group_join(local_node_name := '{{ ansible_hostname }}', node_external_dsn := 'host={{ inventory_hostname }} port=5432 dbname={{ postgresql_bdr_database_name }}', join_using_dsn := 'host={{ initial_master }} port=5432 dbname={{ postgresql_bdr_database_name }}' );\""
+  shell: >
+    psql -U {{ postgresql_admin_user }} -d {{ postgresql_bdr_database_name }}
+    -c "SELECT bdr.bdr_group_join(local_node_name := '{{ ansible_hostname }}',
+    node_external_dsn := 'host={{ inventory_hostname }} port=5432 dbname={{ postgresql_bdr_database_name }}',
+    join_using_dsn := 'host={{ initial_master }} port=5432 dbname={{ postgresql_bdr_database_name }}' );"
 
 - name : Wait for cluster to initialize
   pause:

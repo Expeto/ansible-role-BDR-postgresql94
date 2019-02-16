@@ -5,10 +5,10 @@
   ignore_errors: yes
 
 # Uncomment this part to autoremove existing data directories, very risky!
-# - name: Remove old PostgreSQL data directory if exists
-#   file:
-#     dest={{ postgresql_datadir }}
-#     state=absent
+- name: Remove old PostgreSQL data directory if exists
+  file:
+    dest={{ postgresql_datadir }}
+    state=absent
 
 - name : check if future data directory is empty
   find:
