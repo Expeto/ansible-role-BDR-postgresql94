@@ -1,4 +1,5 @@
 galaxy_info:
+  min_ansible_version: 2.7
   author: "Baransel Saginda"
   description: Fully automatic role to install PostgreSQL 9.4 BDR on RedHat/CentOS systems and joins them to same cluster
   license: as-is
@@ -6,8 +7,8 @@ galaxy_info:
     - name: EL
       versions:
       - 7
-      - 7.5
-      - 8
-  categories:
+
+
+  galaxy_tags:
    - database
 dependencies: []

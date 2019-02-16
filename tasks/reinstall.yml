@@ -28,4 +28,4 @@
 - name: Install Official PostgreSQL BDR packages
   yum:
     name: ['postgresql-bdr94-bdr', 'python-psycopg2']
-    state: latest
+    state: present

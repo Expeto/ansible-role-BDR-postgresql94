@@ -1,6 +1,6 @@
 ansible_connection: ssh
-ansible_ssh_user: root
-ansible_ssh_pass: asdasd123
+ansible_ssh_user: loginusername
+ansible_ssh_pass: loginpassword
 
 # Basic settings
 postgresql_datadir: /var/lib/pgsql/9.4-bdr/data
